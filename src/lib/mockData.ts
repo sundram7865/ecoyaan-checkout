@@ -7,6 +7,7 @@ export const getMockCartData = async () => {
         product_price: 299,
         quantity: 2,
         image: "https://via.placeholder.com/150",
+        max_stock: 10
       },
       {
         product_id: 102,
@@ -14,6 +15,7 @@ export const getMockCartData = async () => {
         product_price: 450,
         quantity: 1,
         image: "https://via.placeholder.com/150",
+        max_stock: 5
       },
     ],
     shipping_fee: 50,

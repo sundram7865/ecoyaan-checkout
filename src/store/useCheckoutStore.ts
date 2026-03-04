@@ -9,6 +9,7 @@ interface CheckoutState {
   address: Address | null;
   setCartData: (items: Product[], shipping: number, discount: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
+  removeItem: (id: number) => void;
   setAddress: (address: Address) => void;
   clearCart: () => void;
 }
@@ -25,10 +26,23 @@ export const useCheckoutStore = create<CheckoutState>()(
         set({ cart: items, shippingFee: shipping, discount }),
 
       updateQuantity: (id, quantity) =>
+        
         set((state) => ({
-          cart: state.cart.map((item) =>
-            item.product_id === id ? { ...item, quantity } : item
-          ),
+            
+          cart: state.cart.map((item) => {
+            if (item.product_id === id) {
+              const maxStock = item.max_stock ?? 99;
+              const safeQuantity = Math.max(1, Math.min(quantity, maxStock));
+              console.log("Max stock:", maxStock, "Requested:", quantity, "Safe quantity:", safeQuantity);
+              return { ...item, quantity: safeQuantity };
+            }
+            return item;
+          }),
+        })),
+
+      removeItem: (id) =>
+        set((state) => ({
+          cart: state.cart.filter((item) => item.product_id !== id),
         })),
 
       setAddress: (address) => set({ address }),
