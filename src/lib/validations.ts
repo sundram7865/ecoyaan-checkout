@@ -1,8 +1,10 @@
-export const AddressSchema = import('zod').then((z) => z.z.object({
-  fullName: z.z.string().min(2, "Name is required"),
-  email: z.z.string().email("Invalid email address"),
-  phone: z.z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
-  pinCode: z.z.string().regex(/^\d{6}$/, "Invalid PIN code"),
-  city: z.z.string().min(2, "City is required"),
-  state: z.z.string().min(2, "State is required"),
-}));
+import { z } from "zod";
+
+export const AddressSchema = z.object({
+  fullName: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  pinCode: z.string().regex(/^\d{6}$/, "Invalid PIN code"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State is required"),
+});
