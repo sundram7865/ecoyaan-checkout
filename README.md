@@ -17,7 +17,7 @@ The application focuses on **clean architecture, intuitive UX, and modern fronte
 Deployed on Vercel
 
 🔗 Live App:  
-`https://your-vercel-link.vercel.app`
+`https://ecoyaan-checkout-pi.vercel.app/`
 
 ---
 
