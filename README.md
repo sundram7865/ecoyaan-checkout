@@ -361,7 +361,7 @@ Sundram Kumar Mishra
 Frontend Developer | React | Next.js | UI Engineering
 
 GitHub:  
-`https://github.com/yourusername`
+`https://github.com/sundram7865`
 
 LinkedIn:  
 `https://linkedin.com/in/sundram1mishra`
