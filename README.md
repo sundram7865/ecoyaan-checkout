@@ -243,7 +243,7 @@ Cart data is loaded using mock JSON:
       "product_price": 299,
       "quantity": 2,
       "image": "via.placeholder.com/150",
-      max_stock: 10
+      "max_stock": 10
     },
     {
       "product_id": 102,
@@ -251,7 +251,7 @@ Cart data is loaded using mock JSON:
       "product_price": 450,
       "quantity": 1,
       "image": "via.placeholder.com/150",
-      max_stock: 5
+      "max_stock": 5
     }
   ],
   "shipping_fee": 50,
