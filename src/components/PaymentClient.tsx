@@ -40,7 +40,7 @@ export default function PaymentClient() {
   if (!isMounted || (!address && !isSuccess) || (cart.length === 0 && !isSuccess)) {
     return null;
   }
-
+  const safeAddress = address!;
   const subtotal = cart.reduce(
     (acc, item) => acc + item.product_price * (item.quantity || 1),
     0
@@ -85,7 +85,7 @@ export default function PaymentClient() {
           <p className="text-sm text-gray-500 mt-4">
             Confirmation sent to{" "}
             <span className="font-semibold text-gray-800">
-              {address?.email}
+              {safeAddress?.email}
             </span>
           </p>
         </div>
@@ -117,17 +117,17 @@ export default function PaymentClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-600">
             <div className="space-y-1">
               <p className="font-semibold text-gray-900 text-lg">
-                {address.fullName}
+                {safeAddress.fullName}
               </p>
-              <p>{address.email}</p>
-              <p>+91 {address.phone}</p>
+              <p>{safeAddress.email}</p>
+              <p>+91 {safeAddress.phone}</p>
             </div>
 
             <div className="space-y-1">
               <p>
-                {address.city}, {address.state}
+                {safeAddress.city}, {safeAddress.state}
               </p>
-              <p>PIN: {address.pinCode}</p>
+              <p>PIN: {safeAddress.pinCode}</p>
               <p className="text-sm font-medium text-emerald-600 mt-2 flex items-center gap-1">
                 <CheckCircle2 size={14} /> Verified Address
               </p>
