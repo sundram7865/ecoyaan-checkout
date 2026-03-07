@@ -21,3 +21,8 @@ export interface Address {
   city: string;
   state: string;
 }
+
+export interface SavedAddress extends Address {
+  id: string;
+  label: string; // "Home" | "Work" | any custom string
+}
