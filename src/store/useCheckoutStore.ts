@@ -2,43 +2,77 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Product, Address, SavedAddress } from "../types";
 
+// ── Coupon definitions ────────────────────────────────────────────────────────
+export interface CouponResult {
+  success: boolean;
+  message: string;
+}
+
+export interface AppliedCoupon {
+  code: string;
+  discountType: "percentage" | "flat";
+  discountValue: number; // e.g. 10 → 10% or ₹10 flat
+}
+
+// ── Valid coupon table — all give 15 % off ────────────────────────────────
+// Add new codes here; no logic changes needed anywhere else.
+const VALID_COUPONS: Record<string, Omit<AppliedCoupon, "code">> = {
+  ECO15:     { discountType: "percentage", discountValue: 15 },
+  GREEN15:   { discountType: "percentage", discountValue: 15 },
+  EARTH15:   { discountType: "percentage", discountValue: 15 },
+  SUSTAIN15: { discountType: "percentage", discountValue: 15 },
+  ECOYAAN15: { discountType: "percentage", discountValue: 15 },
+};
+
+// ── State interface ───────────────────────────────────────────────────────────
 interface CheckoutState {
   // ── Cart ──────────────────────────────────────────────────────────
   cart: Product[];
   shippingFee: number;
   discount: number;
+  couponCode: string | null;
+  appliedCoupon: AppliedCoupon | null; // full coupon details after validation
 
   // ── Addresses ─────────────────────────────────────────────────────
   savedAddresses: SavedAddress[];
-  selectedAddressId: string | null; // null = user hasn't explicitly chosen yet
-  address: Address | null;          // mirrors the selected address for payment page
+  selectedAddressId: string | null;
+  address: Address | null;
 
   // ── Cart Actions ──────────────────────────────────────────────────
   setCartData: (items: Product[], shipping: number, discount: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   removeItem: (id: number) => void;
   clearCart: () => void;
+  applyCoupon: (code: string) => CouponResult;
+  removeCoupon: () => void;
+  setCouponCode: (code: string) => void;
+
+  // ── Derived helpers ───────────────────────────────────────────────
+  getCouponDiscount: () => number; // call inside components
 
   // ── Address Actions ───────────────────────────────────────────────
   addAddress: (address: Address, label: string) => void;
   updateAddress: (id: string, address: Address, label: string) => void;
   deleteAddress: (id: string) => void;
-  selectAddress: (id: string) => void;      // explicit user tap only
+  selectAddress: (id: string) => void;
   deselectAddress: () => void;
-  setAddress: (address: Address) => void;   // legacy compat
+  setAddress: (address: Address) => void;
 }
 
+// ── Store ─────────────────────────────────────────────────────────────────────
 export const useCheckoutStore = create<CheckoutState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       cart: [],
       shippingFee: 0,
       discount: 0,
+      couponCode: null,
+      appliedCoupon: null,
       savedAddresses: [],
       selectedAddressId: null,
       address: null,
 
-      // ── Cart ──────────────────────────────────────────────────────
+      // ── Cart ────────────────────────────────────────────────────────
       setCartData: (items, shipping, discount) =>
         set({ cart: items, shippingFee: shipping, discount }),
 
@@ -56,20 +90,88 @@ export const useCheckoutStore = create<CheckoutState>()(
           cart: state.cart.filter((item) => item.product_id !== id),
         })),
 
-      // Does NOT touch savedAddresses — those are permanent user data
       clearCart: () =>
-        set({ cart: [], address: null, shippingFee: 0, discount: 0, selectedAddressId: null }),
+        set({
+          cart: [],
+          address: null,
+          shippingFee: 0,
+          discount: 0,
+          couponCode: null,
+          appliedCoupon: null,
+          selectedAddressId: null,
+        }),
 
-      // ── Addresses ─────────────────────────────────────────────────
-      // addAddress does NOT auto-select — user must explicitly tap a card
+      // ── Coupon ──────────────────────────────────────────────────────
+      /**
+       * Validates the coupon code and, on success, stores the full coupon
+       * details so the cart can derive the discount amount at render time.
+       * Returns { success, message } so the UI can show inline feedback
+       * without needing its own state.
+       */
+      applyCoupon: (code: string): CouponResult => {
+        const normalised = code.trim().toUpperCase();
+
+        if (!normalised) {
+          return { success: false, message: "Please enter a coupon code." };
+        }
+
+        // Already applied the same coupon
+        if (get().appliedCoupon?.code === normalised) {
+          return { success: false, message: `"${normalised}" is already applied.` };
+        }
+
+        const coupon = VALID_COUPONS[normalised];
+
+        if (!coupon) {
+          return { success: false, message: `"${normalised}" is not a valid coupon.` };
+        }
+
+        set({
+          couponCode: normalised,
+          appliedCoupon: { code: normalised, ...coupon },
+        });
+
+        const label =
+          coupon.discountType === "percentage"
+            ? `${coupon.discountValue}% off`
+            : `₹${coupon.discountValue} off`;
+
+        return { success: true, message: `Coupon applied — ${label}!` };
+      },
+
+      removeCoupon: () =>
+        set({ couponCode: null, appliedCoupon: null }),
+
+      setCouponCode: (code) => set({ couponCode: code }),
+
+      /**
+       * Returns the rupee amount to deduct based on the applied coupon.
+       * Call this inside your component:
+       *   const couponDiscount = useCheckoutStore((s) => s.getCouponDiscount());
+       */
+      getCouponDiscount: (): number => {
+        const { appliedCoupon, cart, discount } = get();
+        if (!appliedCoupon) return 0;
+
+        // Coupon applies on product subtotal only (after any existing discount)
+        const subtotal = Math.max(
+          0,
+          cart.reduce((sum, item) => sum + item.product_price * (item.quantity ?? 1), 0) - discount
+        );
+
+        if (appliedCoupon.discountType === "percentage") {
+          return Math.round((subtotal * appliedCoupon.discountValue) / 100);
+        }
+        // flat — never exceed the subtotal
+        return Math.min(appliedCoupon.discountValue, subtotal);
+      },
+
+      // ── Addresses ───────────────────────────────────────────────────
       addAddress: (address, label) =>
         set((state) => {
           const id = `addr_${Date.now()}`;
           const newAddr: SavedAddress = { ...address, id, label };
-          return {
-            savedAddresses: [...state.savedAddresses, newAddr],
-            // intentionally do NOT set selectedAddressId here
-          };
+          return { savedAddresses: [...state.savedAddresses, newAddr] };
         }),
 
       updateAddress: (id, address, label) =>
@@ -77,7 +179,6 @@ export const useCheckoutStore = create<CheckoutState>()(
           savedAddresses: state.savedAddresses.map((a) =>
             a.id === id ? { ...address, id, label } : a
           ),
-          // refresh active address if the edited one was selected
           address: state.selectedAddressId === id ? address : state.address,
         })),
 
@@ -87,13 +188,11 @@ export const useCheckoutStore = create<CheckoutState>()(
           const wasSelected = state.selectedAddressId === id;
           return {
             savedAddresses: remaining,
-            // if deleted address was selected → deselect completely
             selectedAddressId: wasSelected ? null : state.selectedAddressId,
             address: wasSelected ? null : state.address,
           };
         }),
 
-      // Only called when user explicitly taps a card
       selectAddress: (id) =>
         set((state) => {
           const found = state.savedAddresses.find((a) => a.id === id);
@@ -101,13 +200,12 @@ export const useCheckoutStore = create<CheckoutState>()(
           return { selectedAddressId: id, address: found };
         }),
 
-      deselectAddress: () =>
-        set({ selectedAddressId: null, address: null }),
+      deselectAddress: () => set({ selectedAddressId: null, address: null }),
 
       setAddress: (address) => set({ address }),
     }),
     {
-      name: "ecoyaan-checkout-v3",
+      name: "ecoyaan-checkout-v4", // bumped — new shape
       storage: createJSONStorage(() => localStorage),
     }
   )
