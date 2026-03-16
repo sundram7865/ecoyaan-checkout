@@ -8,21 +8,28 @@ import { Address } from "../types";
 import {
   CheckCircle2, CreditCard, Lock, MapPin,
   Package, ShieldCheck, Loader2, ArrowLeft,
-  Check, Leaf,
+  Check, Leaf, Ticket,
 } from "lucide-react";
 
 export default function PaymentClient() {
   const router = useRouter();
-  const { cart, shippingFee, address, clearCart } = useCheckoutStore();
+  const {
+    cart, shippingFee, discount, address,
+    getCouponDiscount, appliedCoupon,
+    clearCart,
+  } = useCheckoutStore();
 
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted]       = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [orderId, setOrderId] = useState("");
+  const [isSuccess, setIsSuccess]       = useState(false);
+  const [orderId, setOrderId]           = useState("");
 
-  // Snapshot address+total BEFORE clearCart nulls the store
-  const [confirmedAddress, setConfirmedAddress] = useState<Address | null>(null);
-  const [confirmedTotal, setConfirmedTotal] = useState(0);
+  // Snapshot everything BEFORE clearCart wipes the store
+  const [confirmedAddress, setConfirmedAddress]             = useState<Address | null>(null);
+  const [confirmedTotal, setConfirmedTotal]                 = useState(0);
+  const [confirmedSavings, setConfirmedSavings]             = useState(0);
+  const [confirmedCouponCode, setConfirmedCouponCode]       = useState<string | null>(null);
+  const [confirmedCouponDiscount, setConfirmedCouponDiscount] = useState(0);
 
   useEffect(() => {
     const t = setTimeout(() => setIsMounted(true), 0);
@@ -37,13 +44,20 @@ export default function PaymentClient() {
 
   if (!isMounted || (!address && !isSuccess) || (cart.length === 0 && !isSuccess)) return null;
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product_price * (item.quantity || 1), 0);
-  const grandTotal = subtotal + shippingFee;
+  // ── Shared totals (single source of truth) ──────────────────────────────
+  const subtotal       = cart.reduce((acc, item) => acc + item.product_price * (item.quantity || 1), 0);
+  const couponDiscount = getCouponDiscount();
+  const grandTotal     = Math.max(0, subtotal + shippingFee - discount - couponDiscount);
+  const totalSavings   = discount + couponDiscount;
 
   const handlePayment = () => {
-    // Snapshot before clearCart wipes the store
+    // Snapshot before clearCart nulls everything
     setConfirmedAddress(address);
     setConfirmedTotal(grandTotal);
+    setConfirmedSavings(totalSavings);
+    setConfirmedCouponCode(appliedCoupon?.code ?? null);
+    setConfirmedCouponDiscount(couponDiscount);
+
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
@@ -53,13 +67,13 @@ export default function PaymentClient() {
     }, 2200);
   };
 
-  // ── Success Screen ─────────────────────────────────────────────
+  // ── Success Screen ───────────────────────────────────────────────────────
   if (isSuccess) {
     const a = confirmedAddress!;
     return (
       <div className="max-w-lg mx-auto mt-4">
         <div className="bg-stone-900 rounded-3xl overflow-hidden shadow-2xl">
-          {/* Animated top band */}
+          {/* Top band */}
           <div className="bg-emerald-500 px-10 py-12 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10"
               style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }}
@@ -81,8 +95,7 @@ export default function PaymentClient() {
               <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mb-1.5">Order Reference</p>
               <p className="text-2xl font-black text-white tracking-wider">{orderId}</p>
               <p className="text-xs text-stone-500 mt-2.5">
-                Confirmation sent to{" "}
-                <span className="font-semibold text-stone-300">{a.email}</span>
+                Confirmation sent to <span className="font-semibold text-stone-300">{a.email}</span>
               </p>
             </div>
 
@@ -96,10 +109,45 @@ export default function PaymentClient() {
               </div>
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4">
                 <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-2">Amount Paid</p>
-                <p className="font-black text-white text-2xl tracking-tight">₹{confirmedTotal}</p>
+                <p className="font-black text-white text-2xl tracking-tight">
+                  ₹{confirmedTotal.toLocaleString("en-IN")}
+                </p>
                 <p className="text-emerald-400 text-[10px] mt-1 font-semibold">Payment successful</p>
               </div>
             </div>
+
+            {/* Savings recap — only if user saved something */}
+            {confirmedSavings > 0 && (
+              <div className="bg-stone-800/60 border border-stone-700 rounded-2xl px-5 py-4">
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mb-3">Savings Summary</p>
+                <div className="space-y-2">
+                  {confirmedCouponDiscount > 0 && confirmedCouponCode && (
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-emerald-400">
+                        <Ticket size={11} /> {confirmedCouponCode}
+                      </span>
+                      <span className="text-emerald-400 font-semibold">
+                        −₹{confirmedCouponDiscount.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  {discount > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-stone-400">Other discounts</span>
+                      <span className="text-emerald-400 font-semibold">
+                        −₹{discount.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-stone-700 pt-2 flex justify-between text-sm">
+                    <span className="text-white font-bold">Total saved</span>
+                    <span className="text-emerald-400 font-black">
+                      ₹{confirmedSavings.toLocaleString("en-IN")} 🎉
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => router.push("/")}
@@ -115,14 +163,14 @@ export default function PaymentClient() {
 
   const safeAddress = address!;
 
-  // ── Main Payment Screen ────────────────────────────────────────
+  // ── Main Payment Screen ──────────────────────────────────────────────────
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 pb-28">
 
       {/* ── LEFT ── */}
       <div className="lg:col-span-7 xl:col-span-8 space-y-4">
 
-        {/* Shipping card */}
+        {/* Shipping address card */}
         <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5">
@@ -131,14 +179,11 @@ export default function PaymentClient() {
               </div>
               <h3 className="font-bold text-stone-900 text-sm">Shipping Address</h3>
             </div>
-            <button
-              onClick={() => router.push("/shipping")}
-              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4"
-            >
+            <button onClick={() => router.push("/shipping")}
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4">
               Change
             </button>
           </div>
-
           <div className="flex gap-6 text-sm">
             <div className="flex-1">
               <p className="font-bold text-stone-900">{safeAddress.fullName}</p>
@@ -170,14 +215,11 @@ export default function PaymentClient() {
                 <span className="ml-2 bg-stone-100 text-stone-500 text-xs font-bold px-2 py-0.5 rounded-lg">{cart.length}</span>
               </h3>
             </div>
-            <button
-              onClick={() => router.push("/")}
-              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4"
-            >
+            <button onClick={() => router.push("/")}
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4">
               Edit Cart
             </button>
           </div>
-
           <div className="space-y-3">
             {cart.map((item) => (
               <div key={item.product_id} className="flex items-center gap-4 py-3 border-b border-stone-50 last:border-none">
@@ -209,17 +251,56 @@ export default function PaymentClient() {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Subtotal</span>
-                <span className="text-stone-200 font-medium">₹{subtotal}</span>
+                <span className="text-stone-200 font-medium">₹{subtotal.toLocaleString("en-IN")}</span>
               </div>
+
+              {discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-stone-400">Discount</span>
+                  <span className="text-emerald-400 font-medium">−₹{discount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-sm">
                 <span className="text-stone-400">Shipping</span>
-                <span className="text-stone-200 font-medium">₹{shippingFee}</span>
+                <span className="font-medium">
+                  {shippingFee === 0
+                    ? <span className="text-emerald-400">Free</span>
+                    : <span className="text-stone-200">₹{shippingFee.toLocaleString("en-IN")}</span>}
+                </span>
               </div>
+
+              {/* Coupon row */}
+              {couponDiscount > 0 && appliedCoupon && (
+                <div className="flex justify-between text-sm">
+                  <span className="flex items-center gap-1.5 text-emerald-400">
+                    <Ticket size={11} />
+                    {appliedCoupon.code}
+                    <span className="text-emerald-600 text-[10px]">({appliedCoupon.discountValue}% off)</span>
+                  </span>
+                  <span className="text-emerald-400 font-semibold">
+                    −₹{couponDiscount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
             </div>
 
+            {/* Total box */}
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-4">
               <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Amount Payable</p>
-              <p className="text-white text-3xl font-black tracking-tight">₹{grandTotal}</p>
+              {couponDiscount > 0 && (
+                <p className="text-stone-600 text-sm line-through">
+                  ₹{(subtotal + shippingFee - discount).toLocaleString("en-IN")}
+                </p>
+              )}
+              <p className="text-white text-3xl font-black tracking-tight">
+                ₹{grandTotal.toLocaleString("en-IN")}
+              </p>
+              {totalSavings > 0 && (
+                <p className="text-emerald-500 text-[10px] font-semibold mt-1">
+                  🎉 You save ₹{totalSavings.toLocaleString("en-IN")} on this order
+                </p>
+              )}
             </div>
 
             <button
@@ -232,9 +313,9 @@ export default function PaymentClient() {
               }`}
             >
               {isProcessing ? (
-                <><Loader2 size={17} className="animate-spin text-white" /> <span className="text-white">Processing...</span></>
+                <><Loader2 size={17} className="animate-spin text-white" /><span className="text-white">Processing...</span></>
               ) : (
-                <><Lock size={15} /> Pay ₹{grandTotal} Securely</>
+                <><Lock size={15} /> Pay ₹{grandTotal.toLocaleString("en-IN")} Securely</>
               )}
             </button>
 
@@ -249,10 +330,8 @@ export default function PaymentClient() {
       {/* ══ STICKY BOTTOM BAR (mobile) ══════════════════════════════ */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-2xl lg:hidden">
         <div className="px-4 py-3.5 flex items-center gap-3">
-          <button
-            onClick={() => router.push("/shipping")}
-            className="flex items-center justify-center gap-2 px-5 py-3 border-2 border-stone-200 text-stone-700 font-bold text-sm rounded-xl transition active:scale-95"
-          >
+          <button onClick={() => router.push("/shipping")}
+            className="flex items-center justify-center gap-2 px-5 py-3 border-2 border-stone-200 text-stone-700 font-bold text-sm rounded-xl transition active:scale-95">
             <ArrowLeft size={16} /> Back
           </button>
           <button
@@ -266,7 +345,7 @@ export default function PaymentClient() {
           >
             {isProcessing
               ? <><Loader2 size={15} className="animate-spin text-white" /><span className="text-white">Processing...</span></>
-              : <><Lock size={14} /> Pay ₹{grandTotal}</>
+              : <><Lock size={14} /> Pay ₹{grandTotal.toLocaleString("en-IN")}</>
             }
           </button>
         </div>

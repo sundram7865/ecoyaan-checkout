@@ -10,7 +10,7 @@ import { Address, SavedAddress } from "../types";
 import {
   ArrowRight, ArrowLeft, MapPin, Truck,
   Plus, Check, Pencil, Trash2, X,
-  Home, Briefcase, Tag, AlertCircle, ShoppingBag,
+  Home, Briefcase, Tag, AlertCircle, ShoppingBag, Ticket,
 } from "lucide-react";
 
 const PRESET_LABELS = ["Home", "Work", "Other"] as const;
@@ -59,7 +59,6 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
-        {/* Header */}
         <div className="flex items-center justify-between px-7 py-5 border-b border-stone-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -69,24 +68,17 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
               {editing ? "Edit Address" : "Add New Address"}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition"
-          >
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition">
             <X size={17} />
           </button>
         </div>
 
         <div className="overflow-y-auto max-h-[70vh] px-7 py-6">
-          {/* Label picker */}
           <div className="mb-6">
             <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Label</p>
             <div className="flex gap-2">
               {PRESET_LABELS.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setSelectedLabel(opt)}
+                <button key={opt} type="button" onClick={() => setSelectedLabel(opt)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
                     selectedLabel === opt
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -98,13 +90,8 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
               ))}
             </div>
             {selectedLabel === "Other" && (
-              <input
-                value={customLabel}
-                onChange={(e) => setCustomLabel(e.target.value)}
-                placeholder="e.g. Parents' Home"
-                maxLength={20}
-                className={`${field(false)} mt-3`}
-              />
+              <input value={customLabel} onChange={(e) => setCustomLabel(e.target.value)}
+                placeholder="e.g. Parents' Home" maxLength={20} className={`${field(false)} mt-3`} />
             )}
           </div>
 
@@ -115,13 +102,11 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
                 <input {...register("fullName")} placeholder="John Doe" className={field(!!errors.fullName)} />
                 {errors.fullName && <p className="text-[11px] text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.fullName.message}</p>}
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block mb-1.5">Email *</label>
                 <input type="email" {...register("email")} placeholder="john@example.com" className={field(!!errors.email)} />
                 {errors.email && <p className="text-[11px] text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.email.message}</p>}
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block mb-1.5">Phone *</label>
                 <div className="relative">
@@ -130,19 +115,16 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
                 </div>
                 {errors.phone && <p className="text-[11px] text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.phone.message}</p>}
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block mb-1.5">PIN Code *</label>
                 <input {...register("pinCode")} placeholder="110001" maxLength={6} className={field(!!errors.pinCode)} />
                 {errors.pinCode && <p className="text-[11px] text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.pinCode.message}</p>}
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block mb-1.5">City *</label>
                 <input {...register("city")} placeholder="New Delhi" className={field(!!errors.city)} />
                 {errors.city && <p className="text-[11px] text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.city.message}</p>}
               </div>
-
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block mb-1.5">State *</label>
                 <input {...register("state")} placeholder="Delhi" className={field(!!errors.state)} />
@@ -152,16 +134,13 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
           </form>
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 px-7 py-5 bg-stone-50 border-t border-stone-100">
           <button type="button" onClick={onClose}
-            className="flex-1 py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition"
-          >
+            className="flex-1 py-3 rounded-xl border-2 border-stone-200 text-stone-700 text-sm font-bold hover:bg-stone-100 transition">
             Cancel
           </button>
           <button type="submit" form="addr-form"
-            className="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-bold transition shadow-md active:scale-95"
-          >
+            className="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-bold transition shadow-md active:scale-95">
             {editing ? "Save Changes" : "Add Address"}
           </button>
         </div>
@@ -171,55 +150,40 @@ function AddressModal({ onSave, onClose, editing }: ModalProps) {
 }
 
 // ── Address Card ─────────────────────────────────────────────────────
-function AddressCard({
-  addr, isSelected, onSelect, onEdit, onDelete,
-}: {
+function AddressCard({ addr, isSelected, onSelect, onEdit, onDelete }: {
   addr: SavedAddress; isSelected: boolean;
   onSelect: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   return (
-    <div
-      onClick={onSelect}
+    <div onClick={onSelect}
       className={`relative cursor-pointer rounded-2xl border-2 p-5 transition-all duration-200 select-none ${
         isSelected
           ? "border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-100/60"
           : "border-stone-200 bg-white hover:border-stone-300 hover:shadow-sm"
       }`}
     >
-      {/* Radio indicator — top-right */}
       <div className={`absolute top-4 right-4 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
         isSelected ? "border-emerald-500 bg-emerald-500" : "border-stone-300 bg-white"
       }`}>
         {isSelected && <Check size={11} className="text-white" strokeWidth={3} />}
       </div>
-
-      {/* Label badge */}
       <div className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg mb-3 uppercase tracking-wide ${
         isSelected ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"
       }`}>
         <LabelIcon label={addr.label} />
         {addr.label}
       </div>
-
       <p className="font-bold text-stone-900 text-sm leading-snug">{addr.fullName}</p>
       <p className="text-stone-400 text-xs mt-0.5">{addr.email}</p>
       <p className="text-stone-400 text-xs">+91 {addr.phone}</p>
-      <p className="text-stone-500 text-xs font-medium mt-2">
-        {addr.city}, {addr.state} — {addr.pinCode}
-      </p>
-
-      {/* Actions */}
+      <p className="text-stone-500 text-xs font-medium mt-2">{addr.city}, {addr.state} — {addr.pinCode}</p>
       <div className="flex items-center gap-0.5 mt-4 pt-3 border-t border-stone-100">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 transition"
-        >
+        <button onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 transition">
           <Pencil size={11} /> Edit
         </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="flex items-center gap-1 text-[11px] font-bold text-rose-400 hover:text-rose-600 px-2.5 py-1.5 rounded-lg hover:bg-rose-50 transition"
-        >
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="flex items-center gap-1 text-[11px] font-bold text-rose-400 hover:text-rose-600 px-2.5 py-1.5 rounded-lg hover:bg-rose-50 transition">
           <Trash2 size={11} /> Delete
         </button>
       </div>
@@ -231,9 +195,10 @@ function AddressCard({
 export default function ShippingClient() {
   const router = useRouter();
   const {
-    cart, shippingFee, address,
+    cart, shippingFee, discount, address,
     savedAddresses, selectedAddressId,
     addAddress, updateAddress, deleteAddress, selectAddress,
+    getCouponDiscount, appliedCoupon,
   } = useCheckoutStore();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -247,10 +212,12 @@ export default function ShippingClient() {
 
   if (!isMounted || cart.length === 0) return null;
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product_price * (item.quantity || 1), 0);
-  const grandTotal = subtotal + shippingFee;
+  // ── Shared totals (same formula as CartClient) ──────────────────────────
+  const subtotal       = cart.reduce((acc, item) => acc + item.product_price * (item.quantity || 1), 0);
+  const couponDiscount = getCouponDiscount();
+  const grandTotal     = Math.max(0, subtotal + shippingFee - discount - couponDiscount);
+  const totalSavings   = discount + couponDiscount;
 
-  // canProceed: user must have EXPLICITLY selected an address this session
   const canProceed = !!selectedAddressId && !!address;
 
   const handleSave = (data: Address, label: string) => {
@@ -260,7 +227,7 @@ export default function ShippingClient() {
     setEditingAddr(null);
   };
 
-  const openAdd = () => { setEditingAddr(null); setShowModal(true); };
+  const openAdd  = () => { setEditingAddr(null); setShowModal(true); };
   const openEdit = (addr: SavedAddress) => { setEditingAddr(addr); setShowModal(true); };
 
   return (
@@ -277,8 +244,6 @@ export default function ShippingClient() {
 
         {/* ── LEFT ──────────────────────────────────────────────── */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-5">
-
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -293,15 +258,12 @@ export default function ShippingClient() {
                   : `${savedAddresses.length} saved — tap one to select`}
               </p>
             </div>
-            <button
-              onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl transition shadow-md active:scale-95"
-            >
+            <button onClick={openAdd}
+              className="flex items-center gap-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl transition shadow-md active:scale-95">
               <Plus size={14} /> Add New
             </button>
           </div>
 
-          {/* Empty state */}
           {savedAddresses.length === 0 && (
             <div className="bg-white rounded-2xl border-2 border-dashed border-stone-200 p-14 text-center">
               <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -309,34 +271,25 @@ export default function ShippingClient() {
               </div>
               <p className="text-stone-500 text-sm font-medium mb-1">No addresses saved yet</p>
               <p className="text-stone-400 text-xs mb-5">Add an address to continue to payment</p>
-              <button
-                onClick={openAdd}
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 hover:text-emerald-700"
-              >
+              <button onClick={openAdd}
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 hover:text-emerald-700">
                 <Plus size={14} /> Add your first address
               </button>
             </div>
           )}
 
-          {/* Address grid */}
           {savedAddresses.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {savedAddresses.map((addr) => (
-                <AddressCard
-                  key={addr.id}
-                  addr={addr}
+                <AddressCard key={addr.id} addr={addr}
                   isSelected={selectedAddressId === addr.id}
                   onSelect={() => selectAddress(addr.id)}
                   onEdit={() => openEdit(addr)}
                   onDelete={() => deleteAddress(addr.id)}
                 />
               ))}
-
-              {/* Add new tile */}
-              <button
-                onClick={openAdd}
-                className="border-2 border-dashed border-stone-200 hover:border-emerald-300 rounded-2xl min-h-[160px] flex flex-col items-center justify-center gap-2.5 text-stone-300 hover:text-emerald-500 transition-all group"
-              >
+              <button onClick={openAdd}
+                className="border-2 border-dashed border-stone-200 hover:border-emerald-300 rounded-2xl min-h-[160px] flex flex-col items-center justify-center gap-2.5 text-stone-300 hover:text-emerald-500 transition-all group">
                 <div className="w-10 h-10 rounded-xl border-2 border-dashed border-current flex items-center justify-center group-hover:bg-emerald-50 transition">
                   <Plus size={17} />
                 </div>
@@ -355,33 +308,73 @@ export default function ShippingClient() {
             </div>
 
             <div className="px-7 py-6 space-y-3">
+              {/* Line items */}
               {cart.map((item) => (
                 <div key={item.product_id} className="flex justify-between gap-3">
                   <span className="text-stone-400 text-xs leading-relaxed">
                     {item.product_name}<span className="text-stone-600"> ×{item.quantity}</span>
                   </span>
-                  <span className="text-white text-xs font-semibold flex-shrink-0">₹{item.product_price * item.quantity}</span>
+                  <span className="text-white text-xs font-semibold flex-shrink-0">
+                    ₹{item.product_price * item.quantity}
+                  </span>
                 </div>
               ))}
 
+              {/* Price breakdown */}
               <div className="border-t border-stone-800 pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-stone-400">Subtotal</span>
-                  <span className="text-stone-200 font-medium">₹{subtotal}</span>
+                  <span className="text-stone-200 font-medium">₹{subtotal.toLocaleString("en-IN")}</span>
                 </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-stone-400">Discount</span>
+                    <span className="text-emerald-400 font-medium">−₹{discount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-sm">
                   <span className="text-stone-400">Shipping</span>
-                  <span className="text-stone-200 font-medium">₹{shippingFee}</span>
+                  <span className="font-medium">
+                    {shippingFee === 0
+                      ? <span className="text-emerald-400">Free</span>
+                      : <span className="text-stone-200">₹{shippingFee.toLocaleString("en-IN")}</span>}
+                  </span>
                 </div>
+
+                {/* Coupon row */}
+                {couponDiscount > 0 && appliedCoupon && (
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1.5 text-emerald-400">
+                      <Ticket size={11} />
+                      {appliedCoupon.code}
+                      <span className="text-emerald-600 text-[10px]">({appliedCoupon.discountValue}% off)</span>
+                    </span>
+                    <span className="text-emerald-400 font-semibold">−₹{couponDiscount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
               </div>
 
+              {/* Total box */}
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-5 py-4">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Total</p>
-                    <p className="text-white text-2xl font-black mt-0.5">₹{grandTotal}</p>
+                    {couponDiscount > 0 && (
+                      <p className="text-stone-600 text-xs line-through mt-0.5">
+                        ₹{(subtotal + shippingFee - discount).toLocaleString("en-IN")}
+                      </p>
+                    )}
+                    <p className="text-white text-2xl font-black mt-0.5">
+                      ₹{grandTotal.toLocaleString("en-IN")}
+                    </p>
+                    {totalSavings > 0 && (
+                      <p className="text-emerald-500 text-[10px] font-semibold mt-1">
+                        🎉 You save ₹{totalSavings.toLocaleString("en-IN")}
+                      </p>
+                    )}
                   </div>
-                  {/* Selected address preview */}
                   {canProceed && (
                     <div className="text-right max-w-[110px]">
                       <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Delivering to</p>
@@ -391,7 +384,6 @@ export default function ShippingClient() {
                 </div>
               </div>
 
-              {/* Truck icon when selected */}
               {canProceed && (
                 <div className="flex items-center gap-2 bg-stone-800 rounded-xl px-4 py-3">
                   <Truck size={14} className="text-emerald-400 flex-shrink-0" />
@@ -407,7 +399,6 @@ export default function ShippingClient() {
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-2xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex items-center gap-3">
-            {/* Status hint */}
             <div className="flex-1 hidden sm:block min-w-0">
               {canProceed ? (
                 <div className="flex items-center gap-2">
@@ -427,16 +418,11 @@ export default function ShippingClient() {
                 <p className="text-xs text-stone-400 font-medium">Add a delivery address to continue</p>
               )}
             </div>
-
-            {/* Back + Continue — always together */}
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center justify-center gap-2 px-5 py-3 border-2 border-stone-200 hover:border-stone-300 text-stone-700 font-bold text-sm rounded-xl transition-all hover:bg-stone-50 active:scale-95 flex-shrink-0"
-            >
+            <button onClick={() => router.push("/")}
+              className="flex items-center justify-center gap-2 px-5 py-3 border-2 border-stone-200 hover:border-stone-300 text-stone-700 font-bold text-sm rounded-xl transition-all hover:bg-stone-50 active:scale-95 flex-shrink-0">
               <ArrowLeft size={16} />
               <span className="hidden sm:inline">Back</span>
             </button>
-
             <button
               onClick={() => { if (canProceed) router.push("/payment"); }}
               disabled={!canProceed}
@@ -446,8 +432,7 @@ export default function ShippingClient() {
                   : "bg-stone-100 text-stone-400 cursor-not-allowed"
               }`}
             >
-              Continue to Payment
-              <ArrowRight size={16} />
+              Continue to Payment <ArrowRight size={16} />
             </button>
           </div>
         </div>
